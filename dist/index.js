@@ -3,102 +3,19 @@ module.exports =
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 2932:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const os = __nccwpck_require__(2087);
+/***/ ((__unused_webpack_module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const core = __nccwpck_require__(2186);
-const tc = __nccwpck_require__(7784);
-const { Octokit } = __nccwpck_require__(5375);
 
-/**
- * Get the GitHub platform architecture name
- * @param {string} arch - https://nodejs.org/api/os.html#os_os_arch
- * @returns {string}
- */
-function mapArch(arch) {
-  const mappings = {
-    x32: '386',
-    x64: 'amd64',
-  };
-  return mappings[arch] || arch;
-}
+const setup = __nccwpck_require__(7303);
 
-/**
- * Get the GitHub OS name
- * @param {string} osPlatform - https://nodejs.org/api/os.html#os_os_platform
- * @returns {string}
- */
-function mapOS(osPlatform) {
-  const mappings = {
-    win32: 'windows',
-  };
-  return mappings[osPlatform] || osPlatform;
-}
-
-function getOctokit() {
-  const options = {};
-  const token = core.getInput('github_token');
-  if (token) {
-    core.debug('Using token authentication for Octokit');
-    options.auth = token;
-  }
-
-  return new Octokit(options);
-}
-
-async function getTFLintVersion(inputVersion) {
-  if (!inputVersion || inputVersion === 'latest') {
-    core.debug('Requesting for [latest] version ...');
-    const octokit = getOctokit();
-    const response = await octokit.repos.getLatestRelease({
-      owner: 'terraform-linters',
-      repo: 'tflint',
-    });
-    core.debug(`... version resolved to [${response.data.name}]`);
-    return response.data.name;
-  }
-
-  return inputVersion;
-}
-
-async function downloadCLI(url) {
-  core.debug(`Downloading tflint CLI from ${url}`);
-  const pathToCLIZip = await tc.downloadTool(url);
-
-  core.debug('Extracting tflint CLI zip file');
-  const pathToCLI = await tc.extractZip(pathToCLIZip);
-  core.debug(`tflint CLI path is ${pathToCLI}.`);
-
-  if (!pathToCLIZip || !pathToCLI) {
-    throw new Error(`Unable to download tflint from ${url}`);
-  }
-
-  return pathToCLI;
-}
-
-async function run() {
+(async () => {
   try {
-    const inputVersion = core.getInput('tflint_version');
-    const version = await getTFLintVersion(inputVersion);
-    const platform = mapOS(os.platform());
-    const arch = mapArch(os.arch());
-
-    core.debug(`Getting download URL for tflint version ${version}: ${platform} ${arch}`);
-    const url = `https://github.com/terraform-linters/tflint/releases/download/${version}/tflint_${platform}_${arch}.zip`;
-
-    const pathToCLI = await downloadCLI(url);
-
-    core.addPath(pathToCLI);
-
-    return version;
-  } catch (ex) {
-    core.error(ex);
-    throw ex;
+    await setup();
+  } catch (error) {
+    core.setFailed(error.message);
   }
-}
-
-module.exports = run;
+})();
 
 
 /***/ }),
@@ -9365,6 +9282,107 @@ function wrappy (fn, cb) {
     return ret
   }
 }
+
+
+/***/ }),
+
+/***/ 7303:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const os = __nccwpck_require__(2087);
+
+const core = __nccwpck_require__(2186);
+const tc = __nccwpck_require__(7784);
+const { Octokit } = __nccwpck_require__(5375);
+
+/**
+ * Get the GitHub platform architecture name
+ * @param {string} arch - https://nodejs.org/api/os.html#os_os_arch
+ * @returns {string}
+ */
+function mapArch(arch) {
+  const mappings = {
+    x32: '386',
+    x64: 'amd64',
+  };
+  return mappings[arch] || arch;
+}
+
+/**
+ * Get the GitHub OS name
+ * @param {string} osPlatform - https://nodejs.org/api/os.html#os_os_platform
+ * @returns {string}
+ */
+function mapOS(osPlatform) {
+  const mappings = {
+    win32: 'windows',
+  };
+  return mappings[osPlatform] || osPlatform;
+}
+
+function getOctokit() {
+  const options = {};
+  const token = core.getInput('github_token');
+  if (token) {
+    core.debug('Using token authentication for Octokit');
+    options.auth = token;
+  }
+
+  return new Octokit(options);
+}
+
+async function getTFLintVersion(inputVersion) {
+  if (!inputVersion || inputVersion === 'latest') {
+    core.debug('Requesting for [latest] version ...');
+    const octokit = getOctokit();
+    const response = await octokit.repos.getLatestRelease({
+      owner: 'terraform-linters',
+      repo: 'tflint',
+    });
+    core.debug(`... version resolved to [${response.data.name}]`);
+    return response.data.name;
+  }
+
+  return inputVersion;
+}
+
+async function downloadCLI(url) {
+  core.debug(`Downloading tflint CLI from ${url}`);
+  const pathToCLIZip = await tc.downloadTool(url);
+
+  core.debug('Extracting tflint CLI zip file');
+  const pathToCLI = await tc.extractZip(pathToCLIZip);
+  core.debug(`tflint CLI path is ${pathToCLI}.`);
+
+  if (!pathToCLIZip || !pathToCLI) {
+    throw new Error(`Unable to download tflint from ${url}`);
+  }
+
+  return pathToCLI;
+}
+
+async function run() {
+  try {
+    const inputVersion = core.getInput('tflint_version');
+    const version = await getTFLintVersion(inputVersion);
+    const platform = mapOS(os.platform());
+    const arch = mapArch(os.arch());
+
+    core.debug(`Getting download URL for tflint version ${version}: ${platform} ${arch}`);
+    const url = `https://github.com/terraform-linters/tflint/releases/download/${version}/tflint_${platform}_${arch}.zip`;
+
+    const pathToCLI = await downloadCLI(url);
+
+    core.addPath(pathToCLI);
+
+    return version;
+  } catch (ex) {
+    core.error(ex);
+    throw ex;
+  }
+}
+
+module.exports = run;
 
 
 /***/ }),
